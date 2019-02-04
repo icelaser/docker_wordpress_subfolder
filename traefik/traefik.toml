@@ -1,0 +1,20 @@
+defaultEntryPoints = ["http"]
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":8000"
+
+[file]
+[backends]
+  [backends.backend1]
+    [backends.backend1.servers]
+      [backends.backend1.servers.server0]
+        url = "http://wp:80"
+		
+[frontends]
+  [frontends.frontend1]
+    entryPoints = ["http"]
+    backend = "backend1"
+    passHostHeader = true
+		[frontends.frontend1.routes.test_1]
+		rule = "PathPrefix:/subfolder"

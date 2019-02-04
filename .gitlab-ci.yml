@@ -1,0 +1,82 @@
+image: docker:latest
+ 
+variables:
+  DOCKER_DRIVER: overlay
+ 
+services:
+  - docker:dind
+ 
+before_script:
+  - docker info
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+stages:
+  - automatic
+  - manual
+ 
+auto build:
+  stage: automatic
+  tags:
+    - coreos
+  script:
+    - docker build .
+  except:
+    - master
+    - integration
+    - develop
+ 
+.job-template: &deploy
+  tags:
+    - coreos
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_ENVIRONMENT_NAME .
+    - docker push $CI_REGISTRY_IMAGE:$CI_ENVIRONMENT_NAME
+ 
+.job-template: &autodeploy
+  <<: *deploy
+  stage: automatic
+ 
+auto deploy to dev:
+  <<: *autodeploy
+  environment:
+    name: dev
+  only:
+    - develop
+     
+auto deploy to qs:
+  <<: *autodeploy
+  stage: automatic
+  environment:
+    name: qs
+  only:
+    - integration
+ 
+auto deploy to prd:
+  <<: *autodeploy
+  stage: automatic
+  environment:
+    name: prd
+  only:
+    - master
+ 
+.job-template: &manualdeploy
+  <<: *deploy
+  stage: manual
+  when: manual
+ 
+manual deploy to dev:
+  <<: *manualdeploy
+  environment:
+    name: dev
+ 
+manual deploy to qs:
+  <<: *manualdeploy
+  environment:
+    name: qs
+ 
+manual deploy to prd:
+  <<: *manualdeploy
+  environment:
+    name: prd
+  only:
+    - master

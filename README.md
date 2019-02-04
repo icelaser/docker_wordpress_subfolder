@@ -1,0 +1,2 @@
+# WordPress im Unterverzeichnis (Subfolder)
+
